@@ -1,0 +1,15 @@
+.show-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40%;
+    height: calc(100vh - 2 * var(--marin-graph));
+    background-color: #f9f9f9;
+    border-radius: 100px;
+    overflow: hidden;
+    margin-top: var(--marin-graph);
+}
+
+.graph-canvas {
+    display: block;
+}

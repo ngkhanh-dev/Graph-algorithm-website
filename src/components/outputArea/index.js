@@ -1,13 +1,11 @@
 import "./output.css";
-import React, { useEffect, useState, useContext, useRef } from "react";
+import React, { useEffect, useState, useContext, useRef, memo } from "react";
 import { GraphCanvas } from "reagraph";
 import { DataContext } from "../../App";
-import { CanvasTexture } from "three";
 
 function Graph3D() {
     const { sharedData } = useContext(DataContext);
-    console.log(sharedData);
-    console.log("----------");
+
     const [graph, setGraph] = useState({
         nodes: [
             {
@@ -24,9 +22,10 @@ function Graph3D() {
                 id: "1-2",
                 source: "1",
                 target: "2",
-                label: "1-2",
+                label: "1",
             },
         ],
+        direct: "none",
     });
 
     // useEffect(() => {
@@ -60,38 +59,52 @@ function Graph3D() {
     //         });
     // }, []);
 
-    const res = useRef({ nodes: [], links: [], direct: "" });
+    // const res = useRef({ nodes: [], links: [], direct: "" });
 
     useEffect(() => {
         if (sharedData) {
-            res.nodes = sharedData?.graph?.nodes?.map((item) => {
-                return {
-                    id: `${item.id}`,
-                    label: `${item.id}`,
-                };
-            });
-            res.links = sharedData?.graph?.links?.map((item) => {
-                return {
-                    id: `${item.source}-${item.target}`,
-                    source: `${item.source}`,
-                    target: `${item.target}`,
-                    label: `${item.source}-${item.target}`,
-                    size: parseInt(`${item.weight}`),
-                };
-            });
-            res.direct = sharedData?.graph?.direct;
+            const newGraph = {
+                nodes:
+                    sharedData?.nodes?.map((item) => ({
+                        id: `${item.id}`,
+                        label: `${item.id}`,
+                    })) || [],
+                links:
+                    sharedData?.links?.map((item) => ({
+                        id: `${item.source}-${item.target}`,
+                        source: `${item.source}`,
+                        target: `${item.target}`,
+                        label: `${item.weight}`,
+                        size: parseInt(`${item.weight}`),
+                    })) || [],
+                direct: sharedData?.direct || "none",
+            };
+            // res.nodes = sharedData?.graph?.nodes?.map((item) => {
+            //     return {
+            //         id: `${item.id}`,
+            //         label: `${item.id}`,
+            //     };
+            // });
+            // res.links = sharedData?.graph?.links?.map((item) => {
+            //     return {
+            //         id: `${item.source}-${item.target}`,
+            //         source: `${item.source}`,
+            //         target: `${item.target}`,
+            //         label: `${item.source}-${item.target}`,
+            //         size: parseInt(`${item.weight}`),
+            //     };
+            // });
+            // res.direct = sharedData?.graph?.direct;
+            // console.log(newGraph);
+            setGraph(newGraph);
         }
-        // console.log(graph.nodes);
-        // console.log(graph.links);
-        console.log(res);
-        setGraph(res);
-    }, [graph, sharedData]);
+    }, [sharedData]);
 
     return (
         <div className="show-container">
             <GraphCanvas
                 className="graph-canvas"
-                edgeArrowPosition={res.direct === "direct" ? "end" : "none"}
+                edgeArrowPosition={graph.direct === "direct" ? "end" : "none"}
                 labelType="all"
                 nodes={
                     graph?.nodes
@@ -104,19 +117,18 @@ function Graph3D() {
                         : []
                 }
                 draggable
-                renderNode={({ node, size, color, opacity }) => (
+                renderNode={({ size, color, opacity }) => (
                     <group>
                         <mesh>
                             <torusKnotGeometry
                                 attach="geometry"
-                                args={[size, 1.25, 200, 8]}
+                                args={[4, 1.25, 200, 8]}
                             />
                             <meshBasicMaterial
                                 attach="material"
                                 color={color}
                                 opacity={opacity}
                                 transparent
-                                map={CanvasTexture(node.id)}
                             />
                         </mesh>
                     </group>
@@ -126,4 +138,4 @@ function Graph3D() {
     );
 }
 
-export default Graph3D;
+export default memo(Graph3D);

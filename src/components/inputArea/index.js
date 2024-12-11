@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, memo, useRef } from "react";
 import Button from "react-bootstrap/Button";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./input.css";
 import { DataContext } from "../../App";
 
 function TextInput() {
-    const { updateSharedData, sharedData } = useContext(DataContext);
+    const { updateSharedData, sharedData, warn, updateWarn } =
+        useContext(DataContext);
     const [text, setText] = useState("");
     const [input, setInput] = useState("");
 
@@ -27,19 +28,23 @@ function TextInput() {
         setInput(inputText);
     };
 
+    const stringRef = useRef("");
+
     useEffect(() => {
         const form = document.querySelector(".form-1");
-        let graph_value = document.querySelector("#graph-textarea");
-        const dir = document.querySelector("#direction-dropdown");
+
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
-
+            const dir = document.querySelector("#direction-dropdown");
+            let graph_value = document.querySelector("#graph-textarea");
+            console.log("TextInput re-render", { warn, sharedData });
+            stringRef.current = "";
             let quantity = [];
             let links = [];
             graph_value = graph_value?.value?.split("\n");
-            console.log(graph_value);
+
             graph_value?.forEach((item) => {
-                item = item.split(" ");
+                item = item.replace(/\s+/g, " ").trim().split(" ");
                 if (item.length > 1) {
                     if (item?.length >= 2) {
                         if (!quantity.includes(item[0])) quantity.push(item[0]);
@@ -48,12 +53,20 @@ function TextInput() {
 
                     if (item?.length === 2) item.push(0);
 
+                    if (
+                        item[2] < 0 &&
+                        warn !== "Trọng số của cạnh không thể là số âm"
+                    ) {
+                        stringRef.current =
+                            "Trọng số của cạnh không thể là số âm";
+                    }
+
                     links.push({
                         source: item[0],
                         target: item[1],
                         weight: item[2],
                     });
-                    if (dir === "no_direct") {
+                    if (dir.value === "no_direct") {
                         links.push({
                             source: item[1],
                             target: item[0],
@@ -61,30 +74,58 @@ function TextInput() {
                         });
                     }
                 }
+                if (
+                    item.length >= 4 &&
+                    warn !==
+                        "Chỉ được nhập tối đa 3 giá trị bao gồm 2 end-point và weight của cạnh"
+                ) {
+                    stringRef.current =
+                        "Chỉ được nhập tối đa 3 giá trị bao gồm 2 end-point và weight của cạnh";
+                }
             });
+
             quantity = quantity?.map((item) => {
                 return {
                     id: item,
                 };
             });
-            await fetch("http://localhost:3005/api/v1/graphs/create", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
+            updateWarn(`${stringRef.current}`);
+            console.log(stringRef.current);
+            if (stringRef.current === "") {
+                updateSharedData({
                     nodes: quantity,
                     links: links,
-                    direct: dir,
-                }),
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    // console.log(data);
-                    updateSharedData(data);
+                    direct: `${dir.value}`,
                 });
+            } else {
+                updateSharedData({
+                    nodes: [],
+                    links: [],
+                    direct: "",
+                });
+            }
+
+            // await fetch("http://localhost:3005/api/v1/graphs/create", {
+            //     method: "POST",
+            //     headers: {
+            //         "Content-Type": "application/json",
+            //     },
+            //     body: JSON.stringify({
+            //         nodes: quantity,
+            //         links: links,
+            //         direct: `${dir.value}`,
+            //     }),
+            // })
+            //     .then((res) => res.json())
+            //     .then((data) => {
+            //         console.log(data);
+
+            //         updateSharedData(data);
+            //     });
         });
-    }, [sharedData]);
+
+        // console.log(warn + "1");
+    }, []);
 
     // Submit dữ liệu đồ thị lên server
     // const handleSubmit = (e) => {
@@ -101,7 +142,6 @@ function TextInput() {
                     value={text}
                     onChange={handleChange}
                 ></textarea>
-
                 <label htmlFor="direction-dropdown">Chọn kiểu:</label>
                 <select
                     id="direction-dropdown"
@@ -109,12 +149,13 @@ function TextInput() {
                     onChange={handleChangeOption}
                     className="dropdown"
                 >
-                    <option value="" disabled hidden>
+                    {/* <option value="" disabled hidden>
                         Chọn một tùy chọn
-                    </option>
+                    </option> */}
                     <option value="direct">Có hướng</option>
                     <option value="no_direct">Vô hướng</option>
                 </select>
+                {warn && <p>{warn}</p>}
                 <Button
                     type="submit"
                     className="submit-btn"
@@ -159,4 +200,4 @@ function TextInput() {
     );
 }
 
-export default TextInput;
+export default memo(TextInput);

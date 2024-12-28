@@ -1,75 +1,89 @@
-import PriorityQueue from "../../../data-structures/priority-queue/PriorityQueue";
-
-export default function dijkstra(graph, startVertex) {
-    // Init helper variables that we will need for Dijkstra algorithm.
-    const distances = {};
-    const visitedVertices = {};
-    const previousVertices = {};
-    const queue = new PriorityQueue();
-
-    // Init all distances with infinity assuming that currently we can't reach
-    // any of the vertices except the start one.
-    graph.getAllVertices().forEach((vertex) => {
-        distances[vertex.getKey()] = Infinity;
-        previousVertices[vertex.getKey()] = null;
-    });
-
-    // We are already at the startVertex so the distance to it is zero.
-    distances[startVertex.getKey()] = 0;
-
-    // Init vertices queue.
-    queue.add(startVertex, distances[startVertex.getKey()]);
-
-    // Iterate over the priority queue of vertices until it is empty.
-    while (!queue.isEmpty()) {
-        // Fetch next closest vertex.
-        const currentVertex = queue.poll();
-
-        // Iterate over every unvisited neighbor of the current vertex.
-        currentVertex.getNeighbors().forEach((neighbor) => {
-            // Don't visit already visited vertices.
-            if (!visitedVertices[neighbor.getKey()]) {
-                // Update distances to every neighbor from current vertex.
-                const edge = graph.findEdge(currentVertex, neighbor);
-
-                const existingDistanceToNeighbor = distances[neighbor.getKey()];
-                const distanceToNeighborFromCurrent =
-                    distances[currentVertex.getKey()] + edge.weight;
-
-                // If we've found shorter path to the neighbor - update it.
-                if (
-                    distanceToNeighborFromCurrent < existingDistanceToNeighbor
-                ) {
-                    distances[neighbor.getKey()] =
-                        distanceToNeighborFromCurrent;
-
-                    // Change priority of the neighbor in a queue since it might have became closer.
-                    if (queue.hasValue(neighbor)) {
-                        queue.changePriority(
-                            neighbor,
-                            distances[neighbor.getKey()]
-                        );
-                    }
-
-                    // Remember previous closest vertex.
-                    previousVertices[neighbor.getKey()] = currentVertex;
-                }
-
-                // Add neighbor to the queue for further visiting.
-                if (!queue.hasValue(neighbor)) {
-                    queue.add(neighbor, distances[neighbor.getKey()]);
-                }
-            }
-        });
-
-        // Add current vertex to visited ones to avoid visiting it again later.
-        visitedVertices[currentVertex.getKey()] = currentVertex;
+// Priority Queue hỗ trợ thuật toán Dijkstra
+class PriorityQueue {
+    constructor() {
+        this.queue = [];
     }
 
-    // Return the set of shortest distances to all vertices and the set of
-    // shortest paths to all vertices in a graph.
-    return {
-        distances,
-        previousVertices,
-    };
+    push(node, priority) {
+        this.queue.push({ node, priority });
+        this.queue.sort((a, b) => a.priority - b.priority); // Sắp xếp theo độ ưu tiên (dựa vào trọng số)
+    }
+
+    pop() {
+        return this.queue.shift().node; // Lấy phần tử có độ ưu tiên thấp nhất
+    }
+
+    isEmpty() {
+        return this.queue.length === 0;
+    }
 }
+
+async function dijkstra(graphObjects, startNode, endNode) {
+    const { nodes, links } = graphObjects;
+
+    // Chuyển links thành danh sách kề với trọng số (weight)
+    function convertToAdjacencyList(graphObjects) {
+        const adjacencyList = {};
+
+        if (links) {
+            links.forEach(({ source, target, weight }) => {
+                if (!adjacencyList[source]) adjacencyList[source] = [];
+                if (!adjacencyList[target]) adjacencyList[target] = [];
+
+                adjacencyList[source].push({ node: target, weight });
+                //adjacencyList[target].push({ node: source, weight }); // Vì đồ thị không hướng
+            });
+        }
+
+        return adjacencyList;
+    }
+
+    const graph = convertToAdjacencyList(graphObjects);
+
+    // Khởi tạo các giá trị
+    const distances = {}; // Độ dài đường đi từ startNode đến các node khác
+    const previousNodes = {}; // Lưu lại node trước đó trên đường đi ngắn nhất
+    const nodesQueue = new PriorityQueue(); // Priority queue sẽ được dùng để lấy node có khoảng cách ngắn nhất
+
+    // Khởi tạo khoảng cách từ startNode
+    nodes.forEach(({ id }) => {
+        distances[id] = id === startNode ? 0 : Infinity;
+        previousNodes[id] = null;
+        nodesQueue.push(id, distances[id]);
+    });
+
+    // Dijkstra's algorithm
+    while (!nodesQueue.isEmpty()) {
+        const currentNode = nodesQueue.pop();
+
+        // Nếu tìm thấy endNode, kết thúc
+        if (currentNode === endNode) break;
+
+        if (graph[currentNode]) {
+            graph[currentNode].forEach(({ node, weight }) => {
+                const alt = distances[currentNode] + weight;
+                if (alt < distances[node]) {
+                    distances[node] = alt;
+                    previousNodes[node] = currentNode;
+                    nodesQueue.push(node, distances[node]);
+                }
+            });
+        }
+    }
+
+    // Khôi phục đường đi từ startNode đến endNode
+    const path = [];
+    let currentNode = endNode;
+    while (currentNode) {
+        path.unshift(currentNode);
+        currentNode = previousNodes[currentNode];
+    }
+
+    // Nếu không có đường đi, trả về mảng rỗng
+    if (path[0] !== startNode) return [];
+
+    console.log("Đường đi từ", startNode, "đến", endNode, ":", path);
+    return path;
+}
+
+export default dijkstra;

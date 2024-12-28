@@ -46,7 +46,7 @@ textarea::placeholder {
     display: block;
     width: 120px;
     margin: 0 auto;
-    margin-top: 10px;
+    margin-top: 5px;
 }
 
 label {
@@ -86,7 +86,7 @@ label {
     padding: 2px 8px;
     font-size: 14px;
     width: 100%;
-    max-width: 300px;
+    max-width: 200px;
 }
 
 #input-textarea {
@@ -108,4 +108,63 @@ label {
 .custom-input-small::placeholder {
     color: #bbb;
     font-style: italic;
+}
+
+.input-2-block {
+    display: flex;
+    /* background: red; */
+    gap: 20px;
+    width: 65%;
+}
+
+.input-2-block div:nth-child(2) {
+    height: 100%;
+    width: 100px;
+    flex: 1;
+    padding: 15px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    font-size: 16px;
+    outline: none;
+    resize: none;
+    transition: all 0.3s ease-in-out;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.output-list {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.output-item {
+    width: 100%;
+    background-color: #ccc; /* Màu nền cho li */
+    padding: 10px; /* Khoảng cách bên trong */
+    box-sizing: border-box; /* Bao gồm cả padding vào width */
+    border-bottom: 1px solid #aaa;
+}
+
+li.blue-background {
+    background-color: blue;
+    color: white; /* Tuỳ chỉnh thêm nếu muốn chữ màu trắng */
+}
+
+.outputAlgo-container {
+    padding: 0;
+    overflow: auto;
+    max-height: 220px;
+}
+
+.warn-log {
+    background: red;
+    display: inline-block;
+    padding: 2px 5px;
+    margin-top: 2px;
+    border-radius: 99px;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    max-width: 204px;
 }

@@ -63,6 +63,7 @@ function Graph3D() {
 
     useEffect(() => {
         if (sharedData) {
+            console.log(sharedData);
             const newGraph = {
                 nodes:
                     sharedData?.nodes?.map((item) => ({
@@ -75,27 +76,12 @@ function Graph3D() {
                         source: `${item.source}`,
                         target: `${item.target}`,
                         label: `${item.weight}`,
-                        size: parseInt(`${item.weight}`),
+                        mark: `${item.mark}` || 0,
+                        size: parseFloat(`${item.weight}`),
                     })) || [],
                 direct: sharedData?.direct || "none",
             };
-            // res.nodes = sharedData?.graph?.nodes?.map((item) => {
-            //     return {
-            //         id: `${item.id}`,
-            //         label: `${item.id}`,
-            //     };
-            // });
-            // res.links = sharedData?.graph?.links?.map((item) => {
-            //     return {
-            //         id: `${item.source}-${item.target}`,
-            //         source: `${item.source}`,
-            //         target: `${item.target}`,
-            //         label: `${item.source}-${item.target}`,
-            //         size: parseInt(`${item.weight}`),
-            //     };
-            // });
-            // res.direct = sharedData?.graph?.direct;
-            // console.log(newGraph);
+
             setGraph(newGraph);
         }
     }, [sharedData]);
@@ -113,11 +99,15 @@ function Graph3D() {
                 }
                 edges={
                     graph?.links
-                        ? graph.links.map((link) => ({ ...link, key: link.id }))
+                        ? graph.links.map((link) => ({
+                              ...link,
+                              key: link.id,
+                              color: "black",
+                          }))
                         : []
                 }
                 draggable
-                renderNode={({ size, color, opacity }) => (
+                renderNode={({ node, size, color, opacity }) => (
                     <group>
                         <mesh>
                             <torusKnotGeometry

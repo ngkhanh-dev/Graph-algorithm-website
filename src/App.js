@@ -13,26 +13,35 @@ function App() {
         direct: "direct",
     });
     const [warn, setWarn] = useState("");
-    const updateSharedData = useCallback(
-        (newData) => {
-            console.log(JSON.stringify(sharedData), JSON.stringify(newData));
-            if (JSON.stringify(sharedData) !== JSON.stringify(newData)) {
-                console.log("Data updated");
-                setSharedData({ ...newData });
-                console.log("update thành công", newData);
-            }
-        },
-        [sharedData]
-    );
+    const [warnAlgo, setWarnAlgo] = useState("");
+    const updateSharedData = useCallback((newData) => {
+        console.log(JSON.stringify(sharedData), JSON.stringify(newData));
+        if (JSON.stringify(sharedData) !== JSON.stringify(newData)) {
+            console.log("Data updated");
+            setSharedData({ ...newData });
+            console.log("update thành công", newData);
+        }
+    }, []);
 
     const updateWarn = useCallback((newWarn) => {
         setWarn(newWarn);
     }, []);
 
+    const updateWarnAlgo = useCallback((newWarn) => {
+        setWarnAlgo(newWarn);
+    }, []);
+
     return (
         <>
             <DataContext.Provider
-                value={{ sharedData, updateSharedData, warn, updateWarn }}
+                value={{
+                    sharedData,
+                    updateSharedData,
+                    warn,
+                    updateWarn,
+                    warnAlgo,
+                    updateWarnAlgo,
+                }}
             >
                 <TextInput />
                 <Graph3D />

@@ -1,7 +1,8 @@
 import "./reset.css";
 import { createContext, useState, useCallback } from "react";
 import TextInput from "./components/inputArea";
-import Graph3D from "./components/outputArea";
+// import Graph3D from "./components/outputArea";
+import Graph3D from "./components/outputArea/test";
 import "./App.css";
 
 export const DataContext = createContext();
@@ -14,6 +15,8 @@ function App() {
     });
     const [warn, setWarn] = useState("");
     const [warnAlgo, setWarnAlgo] = useState("");
+    const [input, setInput] = useState("");
+
     const updateSharedData = useCallback((newData) => {
         console.log(JSON.stringify(sharedData), JSON.stringify(newData));
         if (JSON.stringify(sharedData) !== JSON.stringify(newData)) {
@@ -21,6 +24,10 @@ function App() {
             setSharedData({ ...newData });
             console.log("update thành công", newData);
         }
+    }, []);
+
+    const updateInput = useCallback((data) => {
+        setInput(data);
     }, []);
 
     const updateWarn = useCallback((newWarn) => {
@@ -41,9 +48,12 @@ function App() {
                     updateWarn,
                     warnAlgo,
                     updateWarnAlgo,
+                    input,
+                    updateInput,
                 }}
             >
                 <TextInput />
+                {/* <Graph3D /> */}
                 <Graph3D />
             </DataContext.Provider>
         </>

@@ -17,9 +17,11 @@ function TextInput() {
         updateWarn,
         warnAlgo,
         updateWarnAlgo,
+        input,
+        updateInput,
     } = useContext(DataContext);
     const [text, setText] = useState("");
-    const [input, setInput] = useState("");
+    // const [input, updateInput] = useState("");
 
     const [selectedOption, setSelectedOption] = useState("");
     const [output, setOutput] = useState([]);
@@ -29,6 +31,8 @@ function TextInput() {
     const handleClick = (index) => {
         if (index !== activeIndex) {
             setActiveIndex(index);
+        } else {
+            setActiveIndex(null);
         }
     };
 
@@ -43,11 +47,11 @@ function TextInput() {
     };
 
     // Xử lý khi nhập đầu vào
-    const handleChangeInput = (e) => {
-        console.log(e.target.value);
-        const inputText = e.target.value;
-        setInput(inputText);
-    };
+    // const handleChangeInput = (e) => {
+    //     console.log(e.target.value);
+    //     const inputText = e.target.value;
+    //     updateInput(inputText);
+    // };
 
     const stringRef = useRef("");
     const stringRefAlgo = useRef("");
@@ -56,8 +60,8 @@ function TextInput() {
         const form = document.querySelector(".form-1");
         const form_2 = document.querySelector(".form-2");
         console.log("activeIndex: ", activeIndex);
-        if (activeIndex !== null) {
-            const cycles = sharedData;
+        if (!isNaN(parseInt(activeIndex))) {
+            const cycles = structuredClone(sharedData);
 
             cycles.links.forEach((link) => {
                 link.mark = "0";
@@ -96,6 +100,19 @@ function TextInput() {
             });
 
             console.log(cycles);
+            console.log(sharedData);
+            if (JSON.stringify(sharedData) !== JSON.stringify(cycles)) {
+                updateSharedData(cycles);
+            }
+        } else {
+            const cycles = structuredClone(sharedData);
+
+            cycles.links.forEach((link) => {
+                link.mark = "0";
+            });
+
+            console.log(JSON.stringify(cycles));
+            console.log(JSON.stringify(sharedData));
             if (JSON.stringify(sharedData) !== JSON.stringify(cycles)) {
                 updateSharedData(cycles);
             }
@@ -126,19 +143,19 @@ function TextInput() {
                     //if (item?.length === 2) item.push(0);
 
                     if (
+                        isNaN(parseFloat(item[2])) &&
+                        warn !== "Trọng số của cạnh phải là số"
+                    ) {
+                        stringRef.current = "Trọng số của cạnh phải là số";
+                    }
+
+                    if (
                         (item[2] <= 0 || !item[2]) &&
                         warn !==
                             "Trọng số của cạnh phải lớn hơn 0 và input phải có tham số thứ 3 là weight"
                     ) {
                         stringRef.current =
                             "Trọng số của cạnh phải lớn hơn 0 và input phải có tham số thứ 3 là weight";
-                    }
-
-                    if (
-                        isNaN(parseFloat(item[2])) &&
-                        warn !== "Trọng số của cạnh phải là số"
-                    ) {
-                        stringRef.current = "Trọng số của cạnh phải là số";
                     }
 
                     if (
@@ -183,7 +200,7 @@ function TextInput() {
                 const newData = {
                     nodes: [...quantity],
                     links: [...links],
-                    direct: `${dir.value}`,
+                    direct: `${dir?.value}`,
                 };
                 await updateSharedData(newData);
                 setOutput([]);
@@ -217,13 +234,14 @@ function TextInput() {
 
         form_2.addEventListener("submit", async (e) => {
             e.preventDefault();
+            stringRefAlgo.current = "";
             const inputField = document.querySelector("#input-textarea");
             const algoSelect = document.querySelector("#algorithm-dropdown");
             console.log("input", inputField.value, ", algo", algoSelect.value);
             const inputValue = inputField.value;
             const algorithm = algoSelect.value;
             console.log(input);
-            setInput(inputValue);
+            updateInput(inputValue);
             form_2.addEventListener("submit", async (e) => {
                 e.preventDefault();
                 const inputField = document.querySelector("#input-textarea");
@@ -239,7 +257,7 @@ function TextInput() {
                 const inputValue = inputField.value;
                 const algorithm = algoSelect.value;
                 console.log(input);
-                setInput(inputValue);
+                updateInput(inputValue);
                 if (algorithm === "dijkstra") {
                     const inpValue = inputValue
                         .replace(/\s+/g, " ")
@@ -345,9 +363,9 @@ function TextInput() {
                         <input
                             id="input-textarea"
                             placeholder="Nhập đầu vào của bạn"
-                            value={input}
+                            //value={input}
                             // rows="1"
-                            onChange={handleChangeInput}
+                            // onChange={handleChangeInput}
                         ></input>
                         <label htmlFor="direction-dropdown">Chọn kiểu:</label>
                         <select
@@ -359,26 +377,13 @@ function TextInput() {
                             <option value="" disabled hidden>
                                 Chọn một tùy chọn
                             </option>
-                            <option
-                                value="dijkstra"
-                                // onClick={() => dijkstra(sharedData, input)}
-                            >
+                            <option value="dijkstra">
                                 Tìm đường đi ngắn nhất
                             </option>
-                            <option
-                                value="findCyclesThroughTwoNodes"
-                                // onClick={() =>
-                                //     findCyclesThroughTwoNodes(sharedData, input)
-                                // }
-                            >
+                            <option value="findCyclesThroughTwoNodes">
                                 Tìm chu trình qua 2 điểm
                             </option>
-                            <option
-                                value="Cycle_through_1"
-                                // onClick={() =>
-                                //     Cycle_through_1(sharedData, input)
-                                // }
-                            >
+                            <option value="Cycle_through_1">
                                 Tìm chu trình xuất phát từ 1 điểm cụ thể
                             </option>
                         </select>

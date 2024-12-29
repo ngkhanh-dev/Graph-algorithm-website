@@ -36,73 +36,133 @@ function TextInput() {
         }
     };
 
+    const handleChange = (e) => {
+        setText(e.target.value);
+    };
+
     const handleChangeOption = (e) => {
         setSelectedOption(e.target.value);
     };
 
-    // Xử lý khi nhập đồ thị
-    const handleChange = (e) => {
-        const inputText = e.target.value;
-        setText(inputText);
-    };
-
-    // Xử lý khi nhập đầu vào
-    // const handleChangeInput = (e) => {
-    //     console.log(e.target.value);
-    //     const inputText = e.target.value;
-    //     updateInput(inputText);
-    // };
-
     const stringRef = useRef("");
     const stringRefAlgo = useRef("");
+
+    const content = Array.isArray(output[0]);
+
+    const calculateTotalDistance = (path, graphObjects) => {
+        path = path.replace(/\s+/g, " ").trim().split(" ");
+        //console.log(path, typeof path, graphObjects);
+        const { links } = graphObjects;
+        let totalDistance = 0;
+
+        for (let i = 0; i < path.length - 1; i++) {
+            const startNode = path[i];
+            const endNode = path[i + 1];
+            const edge = links.find((link) => {
+                return link.source === startNode && link.target === endNode;
+            });
+            if (edge) {
+                totalDistance += parseFloat(edge.weight);
+            } else {
+                // console.log(
+                //     `Không tìm thấy cạnh giữa ${startNode} và ${endNode}`
+                // );
+                return Infinity;
+            }
+        }
+
+        return totalDistance;
+    };
+    let path = "";
+    if (!content) {
+        path = output.join(" ");
+    }
 
     useEffect(() => {
         const form = document.querySelector(".form-1");
         const form_2 = document.querySelector(".form-2");
-        console.log("activeIndex: ", activeIndex);
+        //console.log("activeIndex: ", activeIndex);
         if (!isNaN(parseInt(activeIndex))) {
-            const cycles = structuredClone(sharedData);
+            if (output && output.length > 0 && !Array.isArray(output[0])) {
+                const cycles = structuredClone(sharedData);
 
-            cycles.links.forEach((link) => {
-                link.mark = "0";
-            });
-            const arr_res = output[activeIndex];
-            console.log(arr_res, activeIndex);
-
-            // Lặp qua các cặp liên tiếp trong `nodes`
-            for (let i = 0; i < arr_res.length - 1; i++) {
-                const currentSource = arr_res[i];
-                const currentTarget = arr_res[i + 1];
-
-                // Chỉ thêm `mark: "1"` nếu đối tượng đã tồn tại
                 cycles.links.forEach((link) => {
-                    console.log(
-                        link.source === currentSource &&
+                    link.mark = "0";
+                });
+                //console.log("abccccccc", typeof output[0], activeIndex);
+                // Lặp qua các cặp liên tiếp trong `nodes`
+                for (let i = 0; i < output.length - 1; i++) {
+                    const currentSource = output[i];
+                    const currentTarget = output[i + 1];
+
+                    // Chỉ thêm `mark: "1"` nếu đối tượng đã tồn tại
+                    cycles.links.forEach((link) => {
+                        if (
+                            link.source === currentSource &&
                             link.target === currentTarget
-                    );
+                        ) {
+                            link["mark"] = "1";
+                        }
+                    });
+                }
+
+                // Xử lý chu trình khép kín (liên kết cuối với phần tử đầu tiên)
+                const lastSource = output[output.length - 1];
+                const firstTarget = output[0];
+
+                cycles.links.forEach((link) => {
                     if (
-                        link.source === currentSource &&
-                        link.target === currentTarget
+                        link.source === lastSource &&
+                        link.target === firstTarget
                     ) {
-                        link["mark"] = "1";
+                        link.mark = "1";
                     }
                 });
-            }
+                //console.log(JSON.stringify(sharedData), JSON.stringify(cycles));
 
-            // Xử lý chu trình khép kín (liên kết cuối với phần tử đầu tiên)
-            const lastSource = arr_res[arr_res.length - 1];
-            const firstTarget = arr_res[0];
-
-            cycles.links.forEach((link) => {
-                if (link.source === lastSource && link.target === firstTarget) {
-                    link.mark = "1";
+                if (JSON.stringify(sharedData) !== JSON.stringify(cycles)) {
+                    updateSharedData(cycles);
                 }
-            });
+            } else {
+                const cycles = structuredClone(sharedData);
 
-            console.log(cycles);
-            console.log(sharedData);
-            if (JSON.stringify(sharedData) !== JSON.stringify(cycles)) {
-                updateSharedData(cycles);
+                cycles.links.forEach((link) => {
+                    link.mark = "0";
+                });
+                const arr_res = output[activeIndex];
+
+                // Lặp qua các cặp liên tiếp trong `nodes`
+                for (let i = 0; i < arr_res?.length - 1; i++) {
+                    const currentSource = arr_res[i];
+                    const currentTarget = arr_res[i + 1];
+
+                    // Chỉ thêm `mark: "1"` nếu đối tượng đã tồn tại
+                    cycles.links.forEach((link) => {
+                        if (
+                            link.source === currentSource &&
+                            link.target === currentTarget
+                        ) {
+                            link["mark"] = "1";
+                        }
+                    });
+                }
+
+                // Xử lý chu trình khép kín (liên kết cuối với phần tử đầu tiên)
+                const lastSource = arr_res[arr_res.length - 1];
+                const firstTarget = arr_res[0];
+
+                cycles.links.forEach((link) => {
+                    if (
+                        link.source === lastSource &&
+                        link.target === firstTarget
+                    ) {
+                        link.mark = "1";
+                    }
+                });
+
+                if (JSON.stringify(sharedData) !== JSON.stringify(cycles)) {
+                    updateSharedData(cycles);
+                }
             }
         } else {
             const cycles = structuredClone(sharedData);
@@ -111,8 +171,6 @@ function TextInput() {
                 link.mark = "0";
             });
 
-            console.log(JSON.stringify(cycles));
-            console.log(JSON.stringify(sharedData));
             if (JSON.stringify(sharedData) !== JSON.stringify(cycles)) {
                 updateSharedData(cycles);
             }
@@ -122,7 +180,8 @@ function TextInput() {
             e.preventDefault();
             const dir = document.querySelector("#direction-dropdown");
             let graph_value = document.querySelector("#graph-textarea");
-            console.log("TextInput re-render", { warn, sharedData });
+            setText(graph_value?.value);
+            //console.log("TextInput re-render", { warn, sharedData });
             stringRef.current = "";
             let quantity = [];
             let links = [];
@@ -187,7 +246,7 @@ function TextInput() {
                         "Chỉ được nhập 3 giá trị bao gồm 2 end-point và weight của cạnh";
                 }
             });
-            console.log("warn:   ", warn);
+            //console.log("warn:   ", warn);
 
             quantity = quantity?.map((item) => {
                 return {
@@ -195,7 +254,7 @@ function TextInput() {
                 };
             });
             updateWarn(`${stringRef.current}`);
-            console.log(stringRef.current);
+            //console.log(stringRef.current);
             if (stringRef.current === "") {
                 const newData = {
                     nodes: [...quantity],
@@ -226,7 +285,7 @@ function TextInput() {
             // })
             //     .then((res) => res.json())
             //     .then((data) => {
-            //         console.log(data);
+            //         //console.log(data);
 
             //         updateSharedData(data);
             //     });
@@ -237,10 +296,10 @@ function TextInput() {
             stringRefAlgo.current = "";
             const inputField = document.querySelector("#input-textarea");
             const algoSelect = document.querySelector("#algorithm-dropdown");
-            console.log("input", inputField.value, ", algo", algoSelect.value);
+            //console.log("input", inputField.value, ", algo", algoSelect.value);
             const inputValue = inputField.value;
             const algorithm = algoSelect.value;
-            console.log(input);
+            //console.log(input);
             updateInput(inputValue);
             form_2.addEventListener("submit", async (e) => {
                 e.preventDefault();
@@ -248,15 +307,15 @@ function TextInput() {
                 const algoSelect = document.querySelector(
                     "#algorithm-dropdown"
                 );
-                console.log(
-                    "input",
-                    inputField.value,
-                    ", algo",
-                    algoSelect.value
-                );
+                //console.log(
+                //     "input",
+                //     inputField.value,
+                //     ", algo",
+                //     algoSelect.value
+                // );
                 const inputValue = inputField.value;
                 const algorithm = algoSelect.value;
-                console.log(input);
+                //console.log(input);
                 updateInput(inputValue);
                 if (algorithm === "dijkstra") {
                     const inpValue = inputValue
@@ -270,6 +329,7 @@ function TextInput() {
                             inpValue[0],
                             inpValue[1]
                         );
+
                         setOutput(out);
                     } else if (
                         warnAlgo !== "Chỉ nhập 2 tham số đối với thuật toán này"
@@ -320,7 +380,7 @@ function TextInput() {
         });
 
         // console.log(warn + "1");
-    }, [sharedData, activeIndex]);
+    }, [sharedData, activeIndex, output]);
     return (
         <div className="input-container">
             <form className="textarea-container form-1">
@@ -328,8 +388,8 @@ function TextInput() {
                 <textarea
                     id="graph-textarea"
                     placeholder="Nhập đồ thị của bạn"
-                    value={text}
-                    onChange={handleChange}
+                    // value={text}
+                    // onChange={handleChange}
                 ></textarea>
                 <label htmlFor="direction-dropdown">Chọn kiểu:</label>
                 <select
@@ -399,98 +459,52 @@ function TextInput() {
                 </div>
                 <div className="outputAlgo-container">
                     <ul className="output-list">
-                        {(output || []).map((item, index) => {
-                            const content = Array.isArray(item);
-                            console.log(content);
-                            if (content) {
-                                return (
-                                    <li
-                                        className="output-item"
-                                        style={{
-                                            backgroundColor:
-                                                activeIndex === index
-                                                    ? "blue"
-                                                    : "#ccc",
-                                            color:
-                                                activeIndex === index
-                                                    ? "white"
-                                                    : "black",
-                                        }}
-                                        onClick={() => handleClick(index)}
-                                        key={index}
-                                    >
-                                        {item.join(" ")}
-                                    </li>
-                                );
-                            } else {
-                                function calculateTotalDistance(
-                                    path,
-                                    graphObjects
-                                ) {
-                                    const { links } = graphObjects;
+                        {content ? (
+                            (output || []).map((item, index) => (
+                                <li
+                                    className="output-item"
+                                    style={{
+                                        backgroundColor:
+                                            activeIndex === index
+                                                ? "blue"
+                                                : "#ccc",
+                                        color:
+                                            activeIndex === index
+                                                ? "white"
+                                                : "black",
+                                    }}
+                                    onClick={() => handleClick(index)}
+                                    key={index}
+                                >
+                                    {item.join(" ")}
+                                </li>
+                            ))
+                        ) : // Hàm tính tổng khoảng cách
 
-                                    // Tính tổng trọng số của các cạnh trong đường đi
-                                    let totalDistance = 0;
-
-                                    // Duyệt qua các cặp đỉnh trong mảng path
-                                    for (let i = 0; i < path.length - 1; i++) {
-                                        const startNode = path[i];
-                                        const endNode = path[i + 1];
-
-                                        // Tìm trọng số của cạnh giữa startNode và endNode
-                                        const edge = links.find(
-                                            (link) =>
-                                                (link.source === startNode &&
-                                                    link.target === endNode) ||
-                                                (link.source === endNode &&
-                                                    link.target === startNode)
-                                        );
-
-                                        // Nếu tìm thấy cạnh, cộng trọng số vào tổng
-                                        if (edge) {
-                                            totalDistance += parseFloat(
-                                                edge.weight
-                                            );
-                                        } else {
-                                            console.log(
-                                                `Không tìm thấy cạnh giữa ${startNode} và ${endNode}`
-                                            );
-                                            return Infinity; // Trả về Infinity nếu không có cạnh giữa hai đỉnh
-                                        }
-                                    }
-
-                                    return totalDistance;
-                                }
-
-                                const totalDistance = calculateTotalDistance(
-                                    output,
-                                    sharedData
-                                );
-
-                                return (
-                                    <li
-                                        className="output-item"
-                                        style={{
-                                            backgroundColor:
-                                                activeIndex === index
-                                                    ? "blue"
-                                                    : "#ccc",
-                                            color:
-                                                activeIndex === index
-                                                    ? "white"
-                                                    : "black",
-                                        }}
-                                        onClick={() => handleClick(index)}
-                                        key={index}
-                                    >
-                                        {output
-                                            .join(" ")
-                                            .concat(" | Distance : ")
-                                            .concat(totalDistance)}
-                                    </li>
-                                );
-                            }
-                        })}
+                        output.length > 0 ? (
+                            <li
+                                className="output-item"
+                                style={{
+                                    backgroundColor:
+                                        activeIndex === 0 ? "blue" : "#ccc",
+                                    color:
+                                        activeIndex === 0 ? "white" : "black",
+                                }}
+                                onClick={() => handleClick(0)}
+                                key={1}
+                            >
+                                {path
+                                    .concat(" | Distance : ")
+                                    .concat(
+                                        calculateTotalDistance(
+                                            path,
+                                            sharedData
+                                        ) || ""
+                                    )}
+                            </li>
+                        ) : (
+                            " "
+                        )}
                     </ul>
                 </div>
             </div>

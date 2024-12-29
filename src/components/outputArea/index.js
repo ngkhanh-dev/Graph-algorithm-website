@@ -1,131 +1,116 @@
-// import "./output.css";
-// import React, { useEffect, useState, useContext, useRef, memo } from "react";
-// import { GraphCanvas } from "reagraph";
-// import { DataContext } from "../../App";
+import "./output.css";
+import React, { useEffect, useState, useContext, memo } from "react";
 
-// function Graph3D() {
-//     const { sharedData } = useContext(DataContext);
+import { DataContext } from "../../App";
+import Graph from "react-graph-vis";
+import "vis-network/styles/vis-network.css";
 
-//     const [graph, setGraph] = useState({
-//         nodes: [
-//             {
-//                 id: "1",
-//                 label: "1",
-//             },
-//             {
-//                 id: "2",
-//                 label: "2",
-//             },
-//         ],
-//         links: [
-//             {
-//                 id: "1-2",
-//                 source: "1",
-//                 target: "2",
-//                 label: "1",
-//             },
-//         ],
-//         direct: "none",
-//     });
+const Graph3D = () => {
+    //const networkRef = useRef(null);
+    const { sharedData, input } = useContext(DataContext);
 
-//     // useEffect(() => {
-//     //     fetch("http://localhost:3005/api/v1/graphs")
-//     //         .then((res) => res.json())
-//     //         .then((data) => {
-//     //             const res = data.graph[0];
-//     //             //console.log(data.graph[0]);
-//     //             if (res) {
-//     //                 res.nodes = res.nodes.map((item) => {
-//     //                     return {
-//     //                         id: `${item.id}`,
-//     //                         label: `${item.id}`,
-//     //                     };
-//     //                 });
-//     //                 res.links = res.links.map((item) => {
-//     //                     return {
-//     //                         id: `${item.source}-${item.target}`,
-//     //                         source: `${item.source}`,
-//     //                         target: `${item.target}`,
-//     //                         label: `${item.source}-${item.target}`,
-//     //                     };
-//     //                 });
-//     //             }
-//     //             console.log(res);
-//     //             setGraph(res);
-//     //         })
-//     //         .catch((e) => {
-//     //             console.log(e);
-//     //             <h1>Fetch thất bại</h1>;
-//     //         });
-//     // }, []);
+    const [graph, setGraph] = useState({
+        nodes: [
+            {
+                id: "1",
+                label: "1",
+            },
+            {
+                id: "2",
+                label: "2",
+            },
+        ],
+        edges: [
+            {
+                id: "1-2",
+                from: "1",
+                to: "2",
+                label: "1",
+            },
+        ],
+        direct: "none",
+    });
 
-//     // const res = useRef({ nodes: [], links: [], direct: "" });
+    useEffect(() => {
+        if (sharedData) {
+            const inp = input.replace(/\s+/g, " ").trim().split(" ");
+            const newGraph = {
+                nodes:
+                    sharedData?.nodes?.map((item) => ({
+                        id: `${item.id}`,
+                        label: `${item.id}`,
+                        color: inp.includes(`${item.id}`)
+                            ? { background: "#97C2FC", border: "black" }
+                            : { background: "#c49397", border: "#000" },
+                    })) || [],
+                edges:
+                    sharedData?.links?.map((item) => ({
+                        id: `${item.source}-${item.target}`,
+                        from: `${item.source}`,
+                        to: `${item.target}`,
+                        label: `${item.weight}`,
+                        mark: `${item.mark}` || 0,
+                        color: {
+                            color: item.mark === "1" ? "#c49397" : "#ccc",
+                        },
+                        //size: parseFloat(`${item.weight}`),
+                    })) || [],
+                direct: sharedData?.direct || "none",
+            };
 
-//     useEffect(() => {
-//         if (sharedData) {
-//             console.log(sharedData);
-//             const newGraph = {
-//                 nodes:
-//                     sharedData?.nodes?.map((item) => ({
-//                         id: `${item.id}`,
-//                         label: `${item.id}`,
-//                     })) || [],
-//                 links:
-//                     sharedData?.links?.map((item) => ({
-//                         id: `${item.source}-${item.target}`,
-//                         source: `${item.source}`,
-//                         target: `${item.target}`,
-//                         label: `${item.weight}`,
-//                         mark: `${item.mark}` || 0,
-//                         size: parseFloat(`${item.weight}`),
-//                     })) || [],
-//                 direct: sharedData?.direct || "none",
-//             };
+            setGraph(newGraph);
 
-//             setGraph(newGraph);
-//         }
-//     }, [sharedData]);
+            // // Dữ liệu cho node và cạnh
+            // const nodes = graph.nodes;
 
-//     return (
-//         <div className="show-container">
-//             <GraphCanvas
-//                 className="graph-canvas"
-//                 edgeArrowPosition={graph.direct === "direct" ? "end" : "none"}
-//                 labelType="all"
-//                 nodes={
-//                     graph?.nodes
-//                         ? graph.nodes.map((node) => ({ ...node, key: node.id }))
-//                         : []
-//                 }
-//                 edges={
-//                     graph?.links
-//                         ? graph.links.map((link) => ({
-//                               ...link,
-//                               key: link.id,
-//                               color: "black",
-//                           }))
-//                         : []
-//                 }
-//                 draggable
-//                 renderNode={({ node, size, color, opacity }) => (
-//                     <group>
-//                         <mesh>
-//                             <torusKnotGeometry
-//                                 attach="geometry"
-//                                 args={[4, 1.25, 200, 8]}
-//                             />
-//                             <meshBasicMaterial
-//                                 attach="material"
-//                                 color={color}
-//                                 opacity={opacity}
-//                                 transparent
-//                             />
-//                         </mesh>
-//                     </group>
-//                 )}
-//             />
-//         </div>
-//     );
-// }
+            // const edges = graph.links;
 
-// export default memo(Graph3D);
+            // // Cấu hình cho mạng
+            // const data = {
+            //     nodes,
+            //     edges,
+            // };
+        }
+    }, [sharedData, input]);
+
+    const options = {
+        nodes: {
+            shape: "dot",
+            size: 20,
+        },
+        edges: {
+            width: 2,
+            smooth: { type: "continuous" },
+            arrows: {
+                to: {
+                    enabled: true,
+                    scaleFactor: 1, // Tỷ lệ kích thước mũi tên
+                },
+            },
+        },
+        physics: {
+            enabled: true, // Disable physics để mạng không di chuyển
+        },
+    };
+
+    return (
+        // <div
+        //     ref={networkRef}
+        //     style={{
+        //         width: "600px",
+        //         height: "400px",
+        //         border: "1px solid lightgray",
+        //     }}
+        // ></div>
+
+        <div className="show-container">
+            <Graph
+                key={JSON.stringify(graph)} // Ensures a re-render when graph changes
+                graph={graph}
+                options={options}
+            />
+        </div>
+    );
+};
+
+export default memo(Graph3D);

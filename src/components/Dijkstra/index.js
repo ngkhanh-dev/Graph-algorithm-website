@@ -82,7 +82,7 @@ async function dijkstra(graphObjects, startNode, endNode) {
     // Nếu không có đường đi, trả về mảng rỗng
     if (path[0] !== startNode) return [];
 
-    console.log("Đường đi từ", startNode, "đến", endNode, ":", path);
+    //console.log("Đường đi từ", startNode, "đến", endNode, ":", path);
     return path;
 }
 

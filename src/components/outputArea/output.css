@@ -9,7 +9,3 @@
     overflow: hidden;
     margin-top: var(--marin-graph);
 }
-
-.graph-canvas {
-    display: block;
-}

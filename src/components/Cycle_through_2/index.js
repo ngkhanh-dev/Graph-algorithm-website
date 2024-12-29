@@ -1,5 +1,5 @@
 async function findCyclesPassingThroughNodes(graphObjects, startNode, endNode) {
-    console.log(graphObjects, startNode, endNode, typeof startNode);
+    //console.log(graphObjects, startNode, endNode, typeof startNode);
     const path = [];
     const cycles = [];
 
@@ -47,10 +47,10 @@ async function findCyclesPassingThroughNodes(graphObjects, startNode, endNode) {
     }
 
     const graph = convertToAdjacencyList(graphObjects);
-    console.log("Danh sách kề:", graph);
+    //console.log("Danh sách kề:", graph);
 
     await dfs(graph, startNode);
-    console.log("Chu trình tìm được:", cycles);
+    //console.log("Chu trình tìm được:", cycles);
     return cycles;
 }
 

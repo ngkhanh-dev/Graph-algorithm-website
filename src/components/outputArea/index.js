@@ -8,6 +8,7 @@ import "vis-network/styles/vis-network.css";
 const Graph3D = () => {
     //const networkRef = useRef(null);
     const { sharedData, input } = useContext(DataContext);
+    const [options, setOptions] = useState({});
 
     const [graph, setGraph] = useState({
         nodes: [
@@ -34,6 +35,7 @@ const Graph3D = () => {
     useEffect(() => {
         if (sharedData) {
             const inp = input.replace(/\s+/g, " ").trim().split(" ");
+            const processedEdges = new Map();
             const newGraph = {
                 nodes:
                     sharedData?.nodes?.map((item) => ({
@@ -44,19 +46,54 @@ const Graph3D = () => {
                             : { background: "#c49397", border: "#000" },
                     })) || [],
                 edges:
-                    sharedData?.links?.map((item) => ({
-                        id: `${item.source}-${item.target}`,
-                        from: `${item.source}`,
-                        to: `${item.target}`,
-                        label: `${item.weight}`,
-                        mark: `${item.mark}` || 0,
-                        color: {
-                            color: item.mark === "1" ? "#c49397" : "#ccc",
-                        },
-                        //size: parseFloat(`${item.weight}`),
-                    })) || [],
+                    sharedData?.links
+                        ?.filter((item) => {
+                            const key = `${Math.min(
+                                item.source,
+                                item.target
+                            )}-${Math.max(item.source, item.target)}`;
+                            if (processedEdges.has(key)) return false; // Bỏ qua cạnh trùng lặp
+                            processedEdges.set(key, true);
+                            return true;
+                        })
+                        ?.map((item) => ({
+                            id: `${item.source}-${item.target}`,
+                            from: `${item.source}`,
+                            to: `${item.target}`,
+                            label: `${item.weight}`,
+                            mark: `${item.mark}` || 0,
+                            color: {
+                                color: item.mark === "1" ? "#c49397" : "#ccc",
+                            },
+                            //size: parseFloat(`${item.weight}`),
+                        })) || [],
                 direct: sharedData?.direct || "none",
             };
+
+            const options = {
+                nodes: {
+                    shape: "dot",
+                    size: 20,
+                },
+                edges: {
+                    width: 2,
+                    smooth: { type: "continuous" },
+                },
+                physics: {
+                    enabled: true, // Disable physics để mạng không di chuyển
+                },
+            };
+
+            if (newGraph.direct !== "direct") {
+                options.edges.arrows = {
+                    to: {
+                        enabled: false,
+                        scaleFactor: 0.5,
+                    },
+                };
+            }
+
+            setOptions(options);
 
             setGraph(newGraph);
 
@@ -72,26 +109,6 @@ const Graph3D = () => {
             // };
         }
     }, [sharedData, input]);
-
-    const options = {
-        nodes: {
-            shape: "dot",
-            size: 20,
-        },
-        edges: {
-            width: 2,
-            smooth: { type: "continuous" },
-            arrows: {
-                to: {
-                    enabled: true,
-                    scaleFactor: 1, // Tỷ lệ kích thước mũi tên
-                },
-            },
-        },
-        physics: {
-            enabled: true, // Disable physics để mạng không di chuyển
-        },
-    };
 
     return (
         // <div
